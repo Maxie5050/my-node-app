@@ -24,3 +24,4 @@ console.log("5. Sync code");
   4. "1. setTimeout" executes in the Timers phase of the next Event Loop iteration.
   5. "2. setImmediate" executes in the Check phase, which runs after Poll/Timers phases handle pending callbacks.
 */
+

@@ -2,40 +2,6 @@ const http = require('http');
 const EventEmitter = require('events');
 const logger = require('./logger');
 
-// === Task 1: AppServer ===
-class AppServer extends EventEmitter {
-    constructor() {
-        super();
-        this.server = http.createServer((req, res) => {
-            this.emit('request:received', { method: req.method, url: req.url });
-
-            // === Task 3: Orders endpoint /order/<id> ===
-            if (req.method === 'GET' && req.url.startsWith('/order/')) {
-                const parts = req.url.split('/');
-                const orderId = parts[parts.length - 1] || 'unknown';
-                orderHandler.processOrder(orderId);
-                res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-                return res.end(`Order #${orderId} accepted for processing.`);
-            }
-
-            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end("Hello from Event-Driven Server!");
-        });
-    }
-
-    start(port) {
-        this.server.listen(port, () => {
-            this.emit('server:started', port);
-        });
-    }
-
-    stop() {
-        this.server.close(() => {
-            this.emit('server:stopped');
-        });
-    }
-}
-
 // === Task 3: OrderHandler (Pi to 7 decimal places) ===
 class OrderHandler extends EventEmitter {
     processOrder(orderId) {
@@ -77,10 +43,55 @@ class UserTracker extends EventEmitter {
     }
 }
 
-const app = new AppServer();
 const orderHandler = new OrderHandler();
 const userTracker = new UserTracker();
 
+// === Task 1: AppServer ===
+class AppServer extends EventEmitter {
+    constructor() {
+        super();
+        this.server = http.createServer((req, res) => {
+            this.emit('request:received', { method: req.method, url: req.url });
+
+            // === Task 3: Orders endpoint /order/<id> ===
+            if (req.method === 'GET' && req.url.startsWith('/order/')) {
+                const parts = req.url.split('/');
+                const orderId = parts[parts.length - 1] || 'unknown';
+                orderHandler.processOrder(orderId);
+                res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                return res.end(`Order #${orderId} accepted for processing.`);
+            }
+
+            // HTML response for main page
+            if (req.url === '/') {
+                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+                return res.end(`
+                    <h1>Student Information (Variant 5):</h1>
+                    <p><b>Full Name:</b> Hladki Maksym Vadymovych</p>
+                    <p><b>Group:</b> 477</p>
+                    <p><b>Pi Value (7 places):</b> ${calculatePi7()}</p>
+                `);
+            }
+
+            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end("Hello from Event-Driven Server!");
+        });
+    }
+
+    start(port) {
+        this.server.listen(port, () => {
+            this.emit('server:started', port);
+        });
+    }
+
+    stop() {
+        this.server.close(() => {
+            this.emit('server:stopped');
+        });
+    }
+}
+
+const app = new AppServer();
 logger.setupLogger(app);
 
 app.on('server:started', (port) => console.log(`Server started on port ${port}`));
